@@ -1,4 +1,4 @@
-package dayxx
+package day01
 
 import (
 	"testing"
@@ -6,7 +6,7 @@ import (
 	"github.com/its-felix/AdventOfCode2025/inputs"
 )
 
-const input = "dayxx.txt"
+const input = "day01.txt"
 
 func TestSolvePart1(t *testing.T) {
 	println(SolvePart1(inputs.GetInputLines(input)))
