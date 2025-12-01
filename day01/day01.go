@@ -22,8 +22,41 @@ func SolvePart1(input <-chan string) int {
 }
 
 func SolvePart2(input <-chan string) int {
-	parse(input)
-	return 0
+	countZero := 0
+	position := 50
+
+	for rotation := range parse(input) {
+		// effective change [-99..+99]
+		if change := rotation % 100; change != 0 {
+			position += change
+
+			if position == 0 {
+				// landing on 0
+				countZero++
+			} else if position < 0 {
+				// landing below 0 (roll over to end)
+				if position != change {
+					// count only if previous position was not already zero
+					countZero++
+				}
+
+				position += 100
+			} else if position >= 100 {
+				// landing over 99 (roll over to start)
+				countZero++
+				position -= 100
+			}
+		}
+
+		// add full rotations
+		if rotation < 0 {
+			countZero += (-rotation) / 100
+		} else {
+			countZero += rotation / 100
+		}
+	}
+
+	return countZero
 }
 
 func parse(input <-chan string) iter.Seq[int] {
