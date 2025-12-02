@@ -6,7 +6,7 @@ import (
 	"github.com/its-felix/AdventOfCode2025/inputs"
 )
 
-const input = "day02_example1.txt"
+const input = "day02.txt"
 
 func TestSolvePart1(t *testing.T) {
 	println(SolvePart1(inputs.GetInputLines(input)))
