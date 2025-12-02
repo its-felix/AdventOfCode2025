@@ -8,10 +8,18 @@ import (
 )
 
 func SolvePart1(input <-chan string) int {
+	return solve(input, nextInvalidIdPart1)
+}
+
+func SolvePart2(input <-chan string) int {
+	return solve(input, nextInvalidIdPart2)
+}
+
+func solve(input <-chan string, nextFn func(int) int) int {
 	sum := 0
 
 	for start, end := range parse(input) {
-		for invalidId := range invalidIds(start) {
+		for invalidId := range iterGenerator(start-1, nextFn) {
 			if invalidId > end {
 				break
 			}
@@ -23,16 +31,11 @@ func SolvePart1(input <-chan string) int {
 	return sum
 }
 
-func SolvePart2(input <-chan string) int {
-	parse(input)
-	return 0
-}
-
-func invalidIds(start int) iter.Seq[int] {
+func iterGenerator(start int, nextFn func(int) int) iter.Seq[int] {
 	return func(yield func(int) bool) {
-		curr := start - 1
+		curr := start
 		for {
-			curr = nextInvalidId(curr)
+			curr = nextFn(curr)
 			if !yield(curr) {
 				break
 			}
@@ -40,7 +43,7 @@ func invalidIds(start int) iter.Seq[int] {
 	}
 }
 
-func nextInvalidId(start int) int {
+func nextInvalidIdPart1(start int) int {
 	if start < 11 {
 		return 11
 	}
@@ -59,12 +62,50 @@ func nextInvalidId(start int) int {
 	if firstHalf > secondHalf {
 		num = firstHalf
 	} else if (firstHalf+1)%10 == 0 {
-		return nextInvalidId(start + 1)
+		return nextInvalidIdPart1(start + 1)
 	} else {
 		num = firstHalf + 1
 	}
 
 	return num*int(math.Pow10(len(str)/2)) + num
+}
+
+func nextInvalidIdPart2(start int) int {
+	if start < 11 {
+		return 11
+	}
+
+	for i := start + 1; ; i++ {
+		if isInvalidPart2(i) {
+			return i
+		}
+	}
+}
+
+func isInvalidPart2(num int) bool {
+	str := strconv.Itoa(num)
+	for i := 1; i < len(str); i++ {
+		if isInvalidPart2Step(str, i) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func isInvalidPart2Step(v string, step int) bool {
+	if step >= len(v) || len(v)%step != 0 {
+		return false
+	}
+
+	part := v[:step]
+	for i := step; i+step <= len(v); i += step {
+		if v[i:i+step] != part {
+			return false
+		}
+	}
+
+	return true
 }
 
 func parse(input <-chan string) iter.Seq2[int, int] {
