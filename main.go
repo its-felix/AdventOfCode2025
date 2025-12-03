@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	const day = 2
+	const day = 3
 	copies := [][2]string{
 		{"dayxx/dayxx.go", fmt.Sprintf("day%02d/day%02d.go", day, day)},
 		{"dayxx/dayxx_test.go", fmt.Sprintf("day%02d/day%02d_test.go", day, day)},
