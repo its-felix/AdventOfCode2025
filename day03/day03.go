@@ -5,21 +5,23 @@ import (
 )
 
 func SolvePart1(input <-chan string) uint64 {
-	return solve[[2]uint8](input)
+	return solve(input, 2)
 }
 
 func SolvePart2(input <-chan string) uint64 {
-	return solve[[12]uint8](input)
+	return solve(input, 12)
 }
 
-func solve[T interface{ ~[2]uint8 | ~[12]uint8 }](input <-chan string) uint64 {
+func solve(input <-chan string, batteries int) uint64 {
 	sum := uint64(0)
 
 	for bank := range parse(input) {
-		var high T
+		num := uint64(0)
 
-		for i := 0; i < len(high); i++ {
-			remainingPosToFill := len(high) - i
+		for i := 0; i < batteries; i++ {
+			num *= 10 // make room for another digit 1..9 (on first iteration, num is 0 so it doesnt make a difference)
+
+			remainingPosToFill := batteries - i
 			bestIdxForPos := 0
 
 			for j, v := range bank {
@@ -32,14 +34,8 @@ func solve[T interface{ ~[2]uint8 | ~[12]uint8 }](input <-chan string) uint64 {
 				}
 			}
 
-			high[i] = bank[bestIdxForPos]
+			num += uint64(bank[bestIdxForPos])
 			bank = bank[bestIdxForPos+1:]
-		}
-
-		num := uint64(0)
-		for i := range len(high) {
-			num *= 10
-			num += uint64(high[i])
 		}
 
 		sum += num
