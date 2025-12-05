@@ -1,6 +1,8 @@
 package day05
 
 import (
+	"cmp"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -9,6 +11,10 @@ type Range [2]int
 
 func (r Range) Contains(n int) bool {
 	return n >= r[0] && n <= r[1]
+}
+
+func (r Range) Length() int {
+	return r[1] - r[0] + 1
 }
 
 type Ranges []Range
@@ -21,6 +27,15 @@ func (rs Ranges) Contains(n int) bool {
 	}
 
 	return false
+}
+
+func (rs Ranges) Sort() {
+	slices.SortFunc(rs, func(a, b Range) int {
+		return cmp.Or(
+			a[0]-b[0],
+			a[1]-b[1],
+		)
+	})
 }
 
 func SolvePart1(input <-chan string) int {
@@ -37,8 +52,35 @@ func SolvePart1(input <-chan string) int {
 }
 
 func SolvePart2(input <-chan string) int {
-	parse(input)
-	return 0
+	ranges, _ := parse(input)
+	if len(ranges) < 1 {
+		return 0
+	}
+
+	ranges.Sort()
+
+	count := ranges[0].Length()
+	end := ranges[0][1]
+
+	for i := 1; i < len(ranges); i++ {
+		r := ranges[i]
+		if r[1] <= end {
+			continue
+		}
+
+		if r[0] > end {
+			// starts after previous range
+			count += r.Length()
+			end = r[1]
+		} else {
+			// starts within previous range
+			// but at or after start of previous range (input is sorted)
+			count += r[1] - end
+			end = r[1]
+		}
+	}
+
+	return count
 }
 
 func parse(input <-chan string) (Ranges, []int) {
