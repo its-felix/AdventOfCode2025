@@ -36,12 +36,72 @@ func SolvePart1(input <-chan string) int {
 
 		sum += opResult
 	}
+
 	return sum
 }
 
 func SolvePart2(input <-chan string) int {
-	parse(input)
-	return 0
+	grid := make([][]rune, 0)
+	maxColumns := 0
+
+	for line := range input {
+		if line == "" {
+			continue
+		}
+
+		columns := []rune(line)
+		grid = append(grid, columns)
+		maxColumns = max(maxColumns, len(columns))
+	}
+
+	const operationUnknown = rune('#')
+
+	sum := 0
+	operation := operationUnknown
+	currentNum := 0
+	result := 0
+
+	for col := 0; col < maxColumns; col++ {
+		isInitial := false
+		isColumnDelimiter := true
+
+		for row := 0; row < len(grid); row++ {
+			if col >= len(grid[row]) || grid[row][col] == ' ' {
+				continue
+			}
+
+			isColumnDelimiter = false
+
+			if grid[row][col] >= '0' && grid[row][col] <= '9' {
+				currentNum *= 10
+				currentNum += int(grid[row][col] - '0')
+			} else if grid[row][col] == operationMul || grid[row][col] == operationAdd {
+				operation = grid[row][col]
+				result = currentNum
+				isInitial = true
+			} else {
+				panic("invalid input")
+			}
+		}
+
+		if isColumnDelimiter {
+			sum += result
+			operation = operationUnknown
+			result = 0
+		} else if !isInitial {
+			switch operation {
+			case operationMul:
+				result *= currentNum
+
+			case operationAdd:
+				result += currentNum
+			}
+		}
+
+		currentNum = 0
+	}
+
+	return sum + result
 }
 
 func parse(input <-chan string) []problem {
