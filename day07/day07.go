@@ -1,9 +1,11 @@
 package day07
 
-import "github.com/its-felix/AdventOfCode2025/common"
+import (
+	"github.com/its-felix/AdventOfCode2025/common"
+)
 
 const (
-	GridItemEmpty    = GridItem(0)
+	GridItemSpace    = GridItem(0)
 	GridItemSplitter = GridItem(1)
 )
 
@@ -17,28 +19,67 @@ func SolvePart1(input <-chan string) int {
 	splits := 0
 
 	for row := 0; row < len(grid); row++ {
+		nextRowBeamColumns := make([]bool, len(grid[row]))
+
 		for col := 0; col < len(grid[row]); col++ {
-			if beamColumns[col] && grid[row][col] == GridItemSplitter {
-				splits++
-				beamColumns[col] = false
+			if beamColumns[col] {
+				switch grid[row][col] {
+				case GridItemSpace:
+					nextRowBeamColumns[col] = true
 
-				if col-1 >= 0 {
-					beamColumns[col-1] = true
-				}
+				case GridItemSplitter:
+					splits++
 
-				if col+1 < len(grid[row]) {
-					beamColumns[col+1] = true
+					if col-1 >= 0 {
+						nextRowBeamColumns[col-1] = true
+					}
+
+					if col+1 < len(grid[row]) {
+						nextRowBeamColumns[col+1] = true
+					}
 				}
 			}
 		}
+
+		beamColumns = nextRowBeamColumns
 	}
 
 	return splits
 }
 
 func SolvePart2(input <-chan string) int {
-	parse(input)
-	return 0
+	beamStartPos, grid := parse(input)
+	beamColumnTimelines := make([]int, len(grid[0]))
+	beamColumnTimelines[beamStartPos.Col()] = 1
+	timelines := 1
+
+	for row := 0; row < len(grid); row++ {
+		nextRowBeamColumnTimelines := make([]int, len(grid[row]))
+
+		for col := 0; col < len(grid[row]); col++ {
+			if beamColumnTimelines[col] > 0 {
+				switch grid[row][col] {
+				case GridItemSpace:
+					nextRowBeamColumnTimelines[col] += beamColumnTimelines[col]
+
+				case GridItemSplitter:
+					timelines += beamColumnTimelines[col]
+
+					if col-1 >= 0 {
+						nextRowBeamColumnTimelines[col-1] += beamColumnTimelines[col]
+					}
+
+					if col+1 < len(grid[row]) {
+						nextRowBeamColumnTimelines[col+1] += beamColumnTimelines[col]
+					}
+				}
+			}
+		}
+
+		beamColumnTimelines = nextRowBeamColumnTimelines
+	}
+
+	return timelines
 }
 
 func parse(input <-chan string) (common.GridPos, common.Grid[GridItem]) {
@@ -51,13 +92,13 @@ func parse(input <-chan string) (common.GridPos, common.Grid[GridItem]) {
 		for i, c := range runes {
 			switch c {
 			case '.':
-				row[i] = GridItemEmpty
+				row[i] = GridItemSpace
 
 			case '^':
 				row[i] = GridItemSplitter
 
 			case 'S':
-				row[i] = GridItemEmpty
+				row[i] = GridItemSpace
 				beamStartPos = common.GridPos{len(grid), i}
 
 			default:
