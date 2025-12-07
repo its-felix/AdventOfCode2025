@@ -1,34 +1,44 @@
 package common
 
+import "math/bits"
+
 const (
-	DirectionNorth = Direction(0)
-	DirectionEast  = Direction(1)
-	DirectionSouth = Direction(2)
-	DirectionWest  = Direction(3)
+	DirectionNorth = Direction(0b00000010)
+	DirectionEast  = Direction(0b00001000)
+	DirectionSouth = Direction(0b00100000)
+	DirectionWest  = Direction(0b10000000)
+
+	DirectionNorthEast = DirectionNorth | DirectionEast
+	DirectionSouthEast = DirectionSouth | DirectionEast
+	DirectionNorthWest = DirectionNorth | DirectionWest
+	DirectionSouthWest = DirectionSouth | DirectionWest
 )
 
 type Direction uint8
 
 func (d Direction) String() string {
-	switch d {
-	case DirectionNorth:
-		return "N"
-
-	case DirectionEast:
-		return "E"
-
-	case DirectionSouth:
-		return "S"
-
-	case DirectionWest:
-		return "W"
+	s := ""
+	if d&DirectionNorth != 0 {
+		s += "N"
 	}
 
-	panic("invalid direction")
+	if d&DirectionSouth != 0 {
+		s += "S"
+	}
+
+	if d&DirectionEast != 0 {
+		s += "E"
+	}
+
+	if d&DirectionWest != 0 {
+		s += "W"
+	}
+
+	return s
 }
 
 func (d Direction) Add(v int) Direction {
-	return (d + Direction(v)) % 4
+	return Direction(bits.RotateLeft8(uint8(d), v*2))
 }
 
 func (d Direction) Next() Direction {
@@ -38,8 +48,6 @@ func (d Direction) Next() Direction {
 func (d Direction) Negate() Direction {
 	return d.Add(2)
 }
-
-type IntercardinalDirection [2]Direction
 
 type Grid[T any] [][]T
 
@@ -90,17 +98,19 @@ func (p GridPos) Col() int {
 
 func (p GridPos) Move(d Direction, steps int) GridPos {
 	newPos := p
-	switch d {
-	case DirectionNorth:
+	if d&DirectionNorth != 0 {
 		newPos[0] -= steps
+	}
 
-	case DirectionEast:
-		newPos[1] += steps
-
-	case DirectionSouth:
+	if d&DirectionSouth != 0 {
 		newPos[0] += steps
+	}
 
-	case DirectionWest:
+	if d&DirectionEast != 0 {
+		newPos[1] += steps
+	}
+
+	if d&DirectionWest != 0 {
 		newPos[1] -= steps
 	}
 
