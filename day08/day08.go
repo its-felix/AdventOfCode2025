@@ -26,7 +26,7 @@ func SolvePart1(input <-chan string, connect int) int {
 
 	for len(connected) < connect {
 		var ok bool
-		if circuits, ok = connectClosest(connected, circuits); !ok {
+		if circuits, _, ok = connectClosest(connected, circuits); !ok {
 			panic("no more connections possible")
 		}
 	}
@@ -39,11 +39,21 @@ func SolvePart1(input <-chan string, connect int) int {
 }
 
 func SolvePart2(input <-chan string) int {
-	parse(input)
-	return 0
+	circuits := parse(input)
+	connected := make(map[[2]_3DPosition]struct{})
+	var lastConnectedPositions [2]_3DPosition
+
+	for len(circuits) > 1 {
+		var ok bool
+		if circuits, lastConnectedPositions, ok = connectClosest(connected, circuits); !ok {
+			panic("no more connections possible")
+		}
+	}
+
+	return lastConnectedPositions[0][0] * lastConnectedPositions[1][0]
 }
 
-func connectClosest(connected map[[2]_3DPosition]struct{}, circuits []Circuit) ([]Circuit, bool) {
+func connectClosest(connected map[[2]_3DPosition]struct{}, circuits []Circuit) ([]Circuit, [2]_3DPosition, bool) {
 	minDistance := math.MaxFloat64
 	leftCircuitIdx, leftPositionIdx := -1, -1
 	rightCircuitIdx, rightPositionIdx := -1, -1
@@ -72,10 +82,12 @@ func connectClosest(connected map[[2]_3DPosition]struct{}, circuits []Circuit) (
 	}
 
 	if leftCircuitIdx == -1 || leftPositionIdx == -1 || rightCircuitIdx == -1 || rightPositionIdx == -1 {
-		return circuits, false
+		var connectedPositions [2]_3DPosition
+		return circuits, connectedPositions, false
 	}
 
-	return connect(connected, circuits, leftCircuitIdx, leftPositionIdx, rightCircuitIdx, rightPositionIdx), true
+	connectedPositions := [2]_3DPosition{circuits[leftCircuitIdx][leftPositionIdx], circuits[rightCircuitIdx][rightPositionIdx]}
+	return connect(connected, circuits, leftCircuitIdx, leftPositionIdx, rightCircuitIdx, rightPositionIdx), connectedPositions, true
 }
 
 func connect(connected map[[2]_3DPosition]struct{}, circuits []Circuit, leftCircuitIdx, leftPositionIdx, rightCircuitIdx, rightPositionIdx int) []Circuit {
